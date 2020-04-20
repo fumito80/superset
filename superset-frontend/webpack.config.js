@@ -171,6 +171,7 @@ const config = {
     welcome: addPreamble('/src/welcome/index.jsx'),
     profile: addPreamble('/src/profile/index.jsx'),
     showSavedQuery: [path.join(APP_DIR, '/src/showSavedQuery/index.jsx')],
+    test: addPreamble('/src/test/index.jsx'),
   },
   output,
   stats: 'minimal',
@@ -213,6 +214,14 @@ const config = {
         loader: 'imports-loader?define=>false',
       },
       {
+        test: /\.jsx?$/,
+        // include source code for plugins, but exclude node_modules within them
+        exclude: [/superset-ui.*\/node_modules\//],
+        include: [path.resolve(APP_DIR, './src'), /superset-ui.*\/src/],
+        use: [babelLoader],
+        // loader: 'babel-loader',
+      },
+      {
         test: /\.tsx?$/,
         use: [
           'thread-loader',
@@ -236,13 +245,6 @@ const config = {
             },
           },
         ],
-      },
-      {
-        test: /\.jsx?$/,
-        // include source code for plugins, but exclude node_modules within them
-        exclude: [/superset-ui.*\/node_modules\//],
-        include: [new RegExp(`${APP_DIR}/src`), /superset-ui.*\/src/],
-        use: [babelLoader],
       },
       {
         test: /\.css$/,

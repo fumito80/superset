@@ -177,6 +177,7 @@ class SupersetAppInitializer:
             SqlLab,
         )
         from superset.views.tags import TagView
+        from superset.views.test import MyView
 
         #
         # Setup API views
@@ -257,6 +258,15 @@ class SupersetAppInitializer:
             label=__("Queries"),
             category="Manage",
             category_label=__("Manage"),
+            icon="fa-search",
+        )
+        # logger.info(MyView)
+        appbuilder.add_view(
+            MyView,
+            "method1",
+            label=__("My View1"),
+            category="MyView",
+            category_label=__("My View"),
             icon="fa-search",
         )
         if self.config["ENABLE_ROW_LEVEL_SECURITY"]:
