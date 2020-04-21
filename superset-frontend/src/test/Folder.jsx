@@ -5,9 +5,9 @@ import { Provider, connect } from 'react-redux';
 
 // import './Folder.css';
 
-function FolderApp(props) {
+function Folder(props) {
   const { id, name, type, children = [] } = props;
-  const nodes = children.map(node => <Folder key={node.id} id={node.id} />);
+  const nodes = children.map(node => <ConnectedFolder key={node.id} id={node.id} />);
   return (
     <li key={id} data-type={type}>
       <span>{name}</span>
@@ -27,10 +27,10 @@ function mapStateToProps(state, ownProps) {
   return findOwnProps(state, ownProps.id) || state;
 }
 
-const Folder = connect(
+const ConnectedFolder = connect(
   mapStateToProps,
   // null,
   // mapDispatchToProps,
-)(FolderApp);
+)(Folder);
 
-export default Folder;
+export default ConnectedFolder;
