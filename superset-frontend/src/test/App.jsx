@@ -7,7 +7,7 @@ import { Provider, connect } from 'react-redux';
 
 import './App.css';
 
-// import Folder from './Folder';
+import Folder from './Folder';
 
 // Actions
 const ADD = 'ADD';
@@ -25,22 +25,35 @@ function add(name) {
 function reducer(state, action) {
   switch (action.type) {
     case ADD:
-      return [ ...state, { name: action.name }];
+      const id = state[state.length - 1].id + 1;
+      return [ ...state, { name: action.name, id, type: action.name }];
     default:
       return state;
   }
 }
 
-const initState = [
-  {
-    name: 'root',
-  },
-];
+const initState = {
+  id: 1,
+  name: 'root',
+  type: 'folder',
+  children: [
+    {
+      id: 2,
+      name: 'folder1',
+      type: 'folder',
+    },
+    {
+      id: 3,
+      name: 'folder2',
+      type: 'folder',
+    },    
+  ],
+};
 
 const store = createStore(reducer, initState);
 
 function Form(props) {
-  const { onClickToAdd } = props;
+  // const { onClickToAdd } = props;
   let textInput;
   return (
     <div>
@@ -57,17 +70,17 @@ function Form(props) {
 function App() {
   return (
     <Provider store={store}>
-      <FormContainer />
-      {/* <Folder /> */}
+      <>
+        <FormContainer />
+        <Folder />
+      </>
     </Provider>
   );
 }
 
 // Connect to Redux
 function mapStateToProps(state) {
-  return {
-    name: state[state.length - 1].name,
-  };
+  return state;
 }
 
 function mapDispatchToProps(dispatch) {
