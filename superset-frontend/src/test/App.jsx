@@ -4,20 +4,38 @@ import React from 'react';
 
 import { createStore } from 'redux';
 import { Provider, connect } from 'react-redux';
+import * as R from 'ramda';
 
 import './App.css';
 
 import Folder from './Folder';
 
+function findId(id, path = []) {
+  return (node) => {
+    if (node.id === id) {
+      return path;
+    }
+    if (!node.children) {
+      return false;
+    }
+    let ret, child, i = 0;
+    while (!ret && (child = node.children[i])) {
+      ret = findId(id, path.concat('children', i++))(child);
+    }
+    return ret;
+  }
+}
+
 // Actions
 const ADD = 'ADD';
 
 // Action Creators
-function add(name) {
+function add(id, label) {
   // Action
   return {
     type: ADD,
-    name,
+    id,
+    label,
   };
 }
 
@@ -25,8 +43,12 @@ function add(name) {
 function reducer(state, action) {
   switch (action.type) {
     case ADD:
-      const id = state[state.length - 1].id + 1;
-      return [ ...state, { name: action.name, id, type: action.name }];
+      const path = findId(Number(action.id))(state);
+      if (!path) {
+        return state;
+      }
+      const lens = R.pipe(R.append('label'), R.lensPath)(path);
+      return R.set(lens, action.label, state);
     default:
       return state;
   }
@@ -34,18 +56,25 @@ function reducer(state, action) {
 
 const initState = {
   id: 1,
-  name: 'root',
+  label: 'root',
   type: 'folder',
   children: [
     {
       id: 2,
-      name: 'folder1',
+      label: 'folder1',
       type: 'folder',
     },
     {
       id: 3,
-      name: 'folder2',
+      label: 'folder2',
       type: 'folder',
+      children: [
+        {
+          id: 4,
+          label: 'folder4',
+          type: 'folder',
+        },
+      ],
     },    
   ],
 };
@@ -54,15 +83,19 @@ const store = createStore(reducer, initState);
 
 function Form(props) {
   // const { onClickToAdd } = props;
-  let textInput;
+  let labelInput, idInput;
   return (
     <div>
+        <input type="number"
+          placeholder="Enter ID"
+          ref={(input) => { idInput = input; }}
+        />
         <input type="text"
           placeholder="Enter name"
           defaultValue="AAA"
-          ref={(input) => { textInput = input; }}
+          ref={(input) => { labelInput = input; }}
         />
-        <button onClick={() => props.onClick(textInput.value) }>Add</button>
+        <button onClick={() => props.onClick(idInput.value, labelInput.value) }>Add</button>
     </div>
   );
 }
@@ -85,8 +118,8 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    onClick(name) {
-      dispatch(add(name));
+    onClick(id, label) {
+      dispatch(add(id, label));
     },
   };
 }
