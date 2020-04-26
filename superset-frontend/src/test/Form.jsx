@@ -53,7 +53,7 @@ function delItem(action) {
 export const updateLabelReducer = {
   [ALT_LABEL]:
     function(state, action) {
-      const [, path] = getItemById(Number(action.id), state.items);
+      const [, path] = getItemById(action.id, state.items);
       if (!path) {
         return state;
       }
@@ -61,21 +61,21 @@ export const updateLabelReducer = {
     },
   [ADD_ITEM]:
     function(state, action) {
-      const [item, path] = getItemById(Number(action.id), state.items);
+      const [item, path] = getItemById(action.id, state.items);
       if (!item) {
         return state;
       }
       const maxId = state.maxId + 1;
       const children = [...(item.children || []), { id: maxId, label: action.label, type: 'folder' }];
-      return _.merge(
-        {},
-        state,
-        { maxId },
-        { items: _.set({}, [...path, 'children'], children) },
-      );
+      const items = _.set({}, [...path, 'children'], children);
+      return _.merge({}, state, { maxId, items, selectedItem: maxId });
     },
   [DEL_ITEM]:
     function(state, action) {
+      const [, path] = getItemById(action.id, state.items);
+      if (path.length === 0) {
+        return state;
+      }
       return {
         ...state,
         modalConfirm: {
@@ -101,8 +101,6 @@ function Forms(props) {
             placeholder="Enter name"
             defaultValue={label}
             bsSize="sm"
-            onChange={() => {}}
-            // ref={(input) => { labelInput = input; }}
             inputRef={(ref) => { labelInput = ref }}
           />
         </label>

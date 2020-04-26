@@ -31,9 +31,10 @@ function onClickLabel(id) {
 
 // Reducer
 export const selectLabelReducer = {
-  [SELECT_LABEL]: function reducer(state, action) {
-    return { ...state, selectedItem: action.id };
-  }
+  [SELECT_LABEL]:
+    function reducer(state, action) {
+      return { ...state, selectedItem: action.id };
+    }
 }
 
 // Component
