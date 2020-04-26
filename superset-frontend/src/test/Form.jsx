@@ -1,24 +1,25 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { FormControl, ButtonGroup, Button } from 'react-bootstrap';
 import _ from 'lodash';
 
 import { getItemById } from './Folder';
 
 // Actions
-const UPDATE_LABEL = 'UPDATE_LABEL';
+const ALT_LABEL = 'ALT_LABEL';
 const ADD_ITEM = 'ADD_ITEM';
 const DEL_ITEM = 'DEL_ITEM';
 
 // Action Creators
-function updateLabel(id, label) {
+function onClickAltLabal(id, label) {
   return {
-    type: UPDATE_LABEL,
+    type: ALT_LABEL,
     id,
     label,
   };
 }
 
-function addItem(id, label) {
+function onClickAddItem(id, label) {
   return {
     type: ADD_ITEM,
     id,
@@ -26,7 +27,7 @@ function addItem(id, label) {
   };
 }
 
-function delItem(id, label) {
+function onClickDelItem(id, label) {
   return {
     type: DEL_ITEM,
     id,
@@ -34,9 +35,23 @@ function delItem(id, label) {
   };
 }
 
+function delItem(action) {
+  return (state) => {
+    const [item, path] = getItemById(Number(action.id), state.items);
+    if (!item || path.length === 0) {
+      return state;
+    }
+    const parentPath = path.slice(0, -2);
+    const parent = _.get(state.items, parentPath, state.items);
+    const children = parent.children.filter(item => item.id !== action.id);
+    const newState = _.set(_.merge({}, state), ['items', ...parentPath, 'children'], children);
+    return { ...newState, selectedItem: parent.id };
+  }
+}
+
 // Reducer
 export const updateLabelReducer = {
-  [UPDATE_LABEL]:
+  [ALT_LABEL]:
     function(state, action) {
       const [, path] = getItemById(Number(action.id), state.items);
       if (!path) {
@@ -61,37 +76,41 @@ export const updateLabelReducer = {
     },
   [DEL_ITEM]:
     function(state, action) {
-      const [item, path] = getItemById(Number(action.id), state.items);
-      if (!item || path.length === 0) {
-        return state;
-      }
-      const parentPath = path.slice(0, -2);
-      const parent = _.get(state.items, parentPath, state.items);
-      const children = parent.children.filter(item => item.id !== action.id);
-      const newState = _.set(_.merge({}, state), ['items', ...parentPath, 'children'], children);
-      return { ...newState, selectedItem: parent.id };
+      return {
+        ...state,
+        modalConfirm: {
+          open: true,
+          title: `Confirm delete "${action.label}"`,
+          description: 'Are you sure?',
+          callback: delItem(action),
+        }
+      };
     }
 }
 
 // Component
-function Form(props) {
-  const { selectedItem, label, onClickUpdate, onClickAdd, onClickDel } = props;
+function Forms(props) {
+  const { selectedItem, label, onClickAltLabal, onClickAddItem, onClickDelItem } = props;
   let labelInput;
   return (
     <div>
         <label>Selected:&nbsp;
-          <input
+          <FormControl
             key={selectedItem}
             type="text"
             placeholder="Enter name"
             defaultValue={label}
+            bsSize="sm"
             onChange={() => {}}
-            ref={(input) => { labelInput = input; }}
+            // ref={(input) => { labelInput = input; }}
+            inputRef={(ref) => { labelInput = ref }}
           />
         </label>
-        <button onClick={() => onClickUpdate(selectedItem, labelInput.value)}>Alt name</button>
-        <button onClick={() => onClickAdd(selectedItem, labelInput.value)}>Add item</button>
-        <button onClick={() => onClickDel(selectedItem, labelInput.value)}>Del item</button>
+        <ButtonGroup aria-label="Item operation">
+          <Button bsSize="sm" onClick={() => onClickAltLabal(selectedItem, labelInput.value)}>Alt name</Button>
+          <Button bsSize="sm" onClick={() => onClickAddItem(selectedItem, labelInput.value)}>Add item</Button>
+          <Button bsSize="sm" onClick={() => onClickDelItem(selectedItem, labelInput.value)}>Del item</Button>
+        </ButtonGroup>
     </div>
   );
 }
@@ -105,21 +124,7 @@ function mapStateToProps(state, ownProps) {
   return { label: item.label, selectedItem: state.selectedItem };
 }
 
-function mapDispatchToProps(dispatch) {
-  return {
-    onClickUpdate(id, label) {
-      dispatch(updateLabel(id, label));
-    },
-    onClickAdd(id, label) {
-      dispatch(addItem(id, label));
-    },
-    onClickDel(id, label) {
-      dispatch(delItem(id, label));
-    },
-  };
-}
-
 export default connect(
   mapStateToProps,
-  mapDispatchToProps,
-)(Form);
+  { onClickAltLabal, onClickAddItem, onClickDelItem },
+)(Forms);

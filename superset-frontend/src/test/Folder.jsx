@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-// import PropTypes from 'prop-types';
 // import { Panel, Row, Col, Tabs, Tab, FormControl } from 'react-bootstrap';
 
 import './Folder.css';
@@ -23,7 +22,7 @@ export function getItemById(id, node, path = []) {
 const SELECT_LABEL = 'SELECT_LABEL';
 
 // Action Creators
-function selectLabel(id) {
+function onClickLabel(id) {
   return {
     type: SELECT_LABEL,
     id,
@@ -39,11 +38,11 @@ export const selectLabelReducer = {
 
 // Component
 function Folder(props) {
-  const { id, label, type, children = [], onClick, selected } = props;
+  const { id, label, type, children = [], onClickLabel, selected } = props;
   const nodes = children.map(node => <ConnectedFolder key={node.id} id={node.id} />);
   return (
     <li key={id} id={id} data-type={type}>
-      <a className={selected} onClick={() => onClick(id)}>{label}</a>
+      <a className={selected} onClick={() => onClickLabel(id)}>{label}</a>
       <ul>{nodes}</ul>
     </li>
   );
@@ -56,15 +55,7 @@ function mapStateToProps(state, { id = state.items.id }) {
   return { ...item, selected };
 }
 
-function mapDispatchToProps(dispatch) {
-  return {
-    onClick(id) {
-      dispatch(selectLabel(id));
-    },
-  };
-}
-
 export const ConnectedFolder = connect(
   mapStateToProps,
-  mapDispatchToProps,
+  { onClickLabel },
 )(Folder);

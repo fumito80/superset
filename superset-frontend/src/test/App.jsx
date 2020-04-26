@@ -8,7 +8,8 @@ import { Provider } from 'react-redux';
 import './App.css';
 
 import { ConnectedFolder, selectLabelReducer } from './Folder';
-import Form, { updateLabelReducer } from './Form'
+import Forms, { updateLabelReducer } from './Form';
+import ModalConfirm, { modalConfirmReducer } from './Modals';
 
 const initState = {
   selectedItem: 1,
@@ -37,12 +38,19 @@ const initState = {
       },    
     ],
   },
+  modalConfirm: {
+    open: false,
+    title: '',
+    description: '',
+    callbackArgs: null,
+  }
 };
 
 /* Reducers */
 const reducers = {
   ...updateLabelReducer,
   ...selectLabelReducer,
+  ...modalConfirmReducer,
 }
 
 const store = createStore((state, action) => {
@@ -53,8 +61,9 @@ function App() {
   return (
     <Provider store={store}>
       <>
-        <Form />
+        <Forms />
         <ConnectedFolder />
+        <ModalConfirm />
       </>
     </Provider>
   );
