@@ -161,6 +161,7 @@
     "regenerator-runtime": "^0.13.3",
     "rison": "^0.1.1",
     "shortid": "^2.2.6",
+    "typesafe-actions": "^5.1.0",
     "urijs": "^1.18.10",
     "use-query-params": "^0.4.5"
   },
@@ -178,7 +179,9 @@
     "@hot-loader/react-dom": "^16.13.0",
     "@types/jest": "^25.1.4",
     "@types/jquery": "^3.3.32",
+    "@types/ramda": "^0.27.4",
     "@types/react": "^16.9.23",
+    "@types/react-bootstrap": "^0.32.4",
     "@types/react-dom": "^16.9.5",
     "@types/react-redux": "^7.1.7",
     "@types/react-table": "^7.0.2",
