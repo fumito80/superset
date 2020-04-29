@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { createAction, ActionType, getType } from 'typesafe-actions';
 
@@ -51,14 +52,47 @@ export const foldersReducer = {
 //   }
 // }
 
+function noop() {}
+
 // Container
-function Folders(props: Folder & typeof actions) {
-  const { id, ...other } = props;
-  return <ConnectedFolder key={id} id={id} { ...other } />;
+Folders.propTypes = {
+  label: PropTypes.string.isRequired,
+  type: PropTypes.string.isRequired,
+  id: PropTypes.number.isRequired,
+  children: PropTypes.array.isRequired,
+  selected: PropTypes.string.isRequired,
+  actionSelectLabel: PropTypes.func.isRequired,
+}
+
+type FoldersProps = PropTypes.InferProps<typeof Folders.propTypes>;
+
+function Folders(props: FoldersProps) {
+  const { id, ...rest } = props;
+  return <ConnectedFolder key={id} id={id} { ...rest } />;
+}
+
+Folders.defaultProps = {
+  id: 0,
+  type: '',
+  children: [],
+  label: '',
+  selected: '',
+  actionSelectLabel: noop,
 }
 
 // Component
-function Folder(props: Folder & typeof actions) {
+Folder.propTypes = {
+  label: PropTypes.string,
+  type: PropTypes.string,
+  id: PropTypes.number.isRequired,
+  children: PropTypes.array.isRequired,
+  selected: PropTypes.string.isRequired,
+  actionSelectLabel: PropTypes.func.isRequired,
+}
+
+type FolderProps = PropTypes.InferProps<typeof Folder.propTypes>;
+
+function Folder(props: FolderProps) {
   const { id, label, type, children = [], actionSelectLabel, selected } = props;
   const nodes = children.map(({ id, ...other }) => <ConnectedFolder key={id} id={id} { ...other } />);
   return (
@@ -69,10 +103,20 @@ function Folder(props: Folder & typeof actions) {
   );
 }
 
+Folder.defaultProps = {
+  children: [],
+  label: '',
+  selected: '',
+  actionSelectLabel: noop,
+};
+
 // Connect to Redux
 function mapStateToProps(state: State, { id }: Folder) {
   const selected = (state.selectedItem === id) ? 'selected' : '';
   const [item] = getItemById(id || state.folder.id, state.folder);
+  if (item == null) {
+    return { ...state.folder, selected };
+  }
   return { ...item, selected };
 }
 

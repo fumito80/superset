@@ -1,5 +1,7 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+//@ts-ignore
 import { FormControl, ButtonGroup, Button } from 'react-bootstrap';
 import { createAction, ActionType, getType } from 'typesafe-actions';
 import _ from 'lodash';
@@ -121,7 +123,22 @@ function delItem(action: Action) {
 }
 
 // Component
-function Form(props: FormProps & typeof actions) {
+Form.propTypes = {
+  actionAltLabel: PropTypes.func.isRequired,
+  actionAddItem: PropTypes.func.isRequired,
+  actionDelItem: PropTypes.func.isRequired,
+  selectedItem: PropTypes.number,
+  label: PropTypes.string,
+}
+
+type FormProps = PropTypes.InferProps<typeof Form.propTypes>;
+
+function FormContainer(props: FormProps) {
+  const { selectedItem, label, ...rest } = props;
+  return <ConnectedForm selectedItem={selectedItem} label={label} { ...rest } />;
+}
+
+function Form(props: FormProps) {
   const { selectedItem, label, actionAltLabel, actionAddItem, actionDelItem } = props;
   let labelInput: HTMLInputElement;
   return (
@@ -145,19 +162,34 @@ function Form(props: FormProps & typeof actions) {
   );
 }
 
+function noop() {}
+FormContainer.defaultProps = Form.defaultProps = {
+  actionAltLabel: noop,
+  actionAddItem: noop,
+  actionDelItem: noop,
+};
+
 // Connect to Redux
 function mapStateToProps(state: State, ownProps: FormProps) {
-  if (state.selectedItem === ownProps.selectedItem) {
-    return;
-  }
+  // if (state.selectedItem === ownProps.selectedItem) {
+  //   return { label: ownProps.label, selectedItem: ownProps.selectedItem };
+  // }
   const [item] = getItemById(state.selectedItem, state.folder);
   if (item == null) {
-    return state;
+    return { label: ownProps.label, selectedItem: ownProps.selectedItem };
+    // return state;
   }
   return { label: item.label, selectedItem: state.selectedItem };
 }
 
-export default connect(
-  mapStateToProps,
+const ConnectedForm = connect(
+  // mapStateToProps,
+  null,
   actions
 )(Form);
+
+// export default ConnectedForm;
+
+export default connect(
+  mapStateToProps,
+)(FormContainer);

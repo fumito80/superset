@@ -1,6 +1,8 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { createAction, ActionType, getType } from 'typesafe-actions';
+//@ts-ignore
 import { Modal, Button } from 'react-bootstrap';
 
 // Actions Creators
@@ -41,8 +43,22 @@ export const modalConfirmReducer = {
 // }
 
 // Component
-function ModalConfirm(props: any) {
-  const { modalConfirm: { open, title, description, callback }, actionApply, actionCancel } = props;
+function noop() {}
+
+// Container
+ModalConfirm.propTypes = {
+  open: PropTypes.bool.isRequired,
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  actionApply: PropTypes.func.isRequired,
+  actionCancel: PropTypes.func.isRequired,
+  callback: PropTypes.func.isRequired,
+}
+
+type ModalConfirmProps = PropTypes.InferProps<typeof ModalConfirm.propTypes>;
+
+function ModalConfirm(props: ModalConfirmProps) {
+  const { open, title, description, callback, actionApply, actionCancel } = props;
   return (
     <Modal show={open} onHide={actionCancel} bsSize="sm">
       <Modal.Header closeButton>
@@ -59,9 +75,18 @@ function ModalConfirm(props: any) {
   );
 }
 
+ModalConfirm.defaultProps = {
+  open: false,
+  title: '',
+  description: '',
+  callback: noop,
+  actionApply: noop,
+  actionCancel: noop,
+}
+
 // Connect to Redux
 function mapStateToProps({ modalConfirm }: State) {
-  return { modalConfirm };
+  return { ...modalConfirm };
 }
 
 export default connect(
