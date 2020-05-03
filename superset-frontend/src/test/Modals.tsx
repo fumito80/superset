@@ -31,17 +31,6 @@ export const modalConfirmReducer = {
     },
 }
 
-// export const modalConfirmReducer = (state: State, action: Action) => {
-//   switch (action.type) {
-//     case getType(actions.actionApply):
-//       return { ...action.payload.callback(state), modalConfirm: { open: false } };
-//     case getType(actions.actionCancel):
-//       return { ...state, modalConfirm: { open: false } };
-//     default:
-//       return state;
-//   }
-// }
-
 // Component
 function noop() {}
 

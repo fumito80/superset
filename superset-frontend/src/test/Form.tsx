@@ -7,22 +7,22 @@ import { createAction, ActionType, getType } from 'typesafe-actions';
 import _ from 'lodash';
 // import * as R from 'ramda';
 
-import { getItemById } from './Folders';
-
 // Actions
+type ActionResult = { id: number, label: string };
+
 const actions = {
   actionAltLabel: createAction(
     'ALT_LABEL',
     (id: number, label: string) => ({ id, label }),
-  )<Folder>(),
+  )<ActionResult>(),
   actionAddItem: createAction(
     'ADD_ITEM',
     (id: number, label: string) => ({ id, label }),
-  )<Folder>(),
+  )<ActionResult>(),
   actionDelItem: createAction(
     'DEL_ITEM',
     (id: number, label: string) => ({ id, label }),
-  )<Folder>(),
+  )<ActionResult>(),
 }
 
 type Action = ActionType<typeof actions>;
@@ -30,29 +30,31 @@ type Action = ActionType<typeof actions>;
 export const formReducers = {
   [getType(actions.actionAltLabel)]:
     (state: State, action: Action) => {
-      const [, path] = getItemById(action.payload.id, state.folder);
-      if (!path) {
-        return state;
-      }
-      return _.merge({}, state, _.set({}, ['folder', ...path, 'label'], action.payload.label));
+      const altedLabelItem = { ...state.items[action.payload.id], label: action.payload.label };
+      return { ...state, items: { ...state.items, [action.payload.id]: altedLabelItem } };
     },
   [getType(actions.actionAddItem)]:
     (state: State, action: Action) => {
-      const [item, path] = getItemById(action.payload.id, state.folder);
-      if (!item) {
-        return state;
-      }
-      const maxId = state.maxId + 1;
-      // const newChildren = [...(item.children || []), { id: maxId, label: action.payload.label, type: 'folder' }];
-      // const newState = R.set(R.lensPath([...path, 'children']), newChildren, state);
-      const newChildren = [...(item.children || []), { id: maxId, label: action.payload.label, type: 'folder' }];
-      const newState = _.set(_.merge({}, state), ['folder', ...path, 'children'], newChildren);
-      return { ...newState, maxId, selectedItem: maxId };
+      const maxId = state.props.maxId + 1;
+      const targetItem = state.items[action.payload.id];
+      const addedChildIds = { ...targetItem, childIds: [...targetItem.childIds, maxId] };
+      const newItem = { label: action.payload.label, type: '', childIds: [] };
+      return {
+        ...state,
+        props: {
+          maxId,
+          selectedItem: maxId,
+        },
+        items: {
+          ...state.items,
+          [action.payload.id]: addedChildIds,
+          [maxId]: newItem,
+        },
+      };
     },
   [getType(actions.actionDelItem)]:
     (state: State, action: Action) => {
-      const [, path] = getItemById(action.payload.id, state.folder);
-      if (path.length === 0) {
+      if (action.payload.id === 0) {
         return state;
       }
       return {
@@ -67,58 +69,23 @@ export const formReducers = {
     },
 }
 
-// export const formReducers = (state: State, action: Action) => {
-//   switch (action.type) {
-//     case getType(actions.actionAltLabel): {
-//       const [, path] = getItemById(action.payload.id, state.folder);
-//       if (!path) {
-//         return state;
-//       }
-//       return _.merge({}, state, _.set({}, ['folder', ...path, 'label'], action.payload.label));
-//     }
-//     case getType(actions.actionAddItem): {
-//       const [item, path] = getItemById(action.payload.id, state.folder);
-//       if (!item) {
-//         return state;
-//       }
-//       const maxId = state.maxId + 1;
-//       // const newChildren = [...(item.children || []), { id: maxId, label: action.payload.label, type: 'folder' }];
-//       // const newState = R.set(R.lensPath([...path, 'children']), newChildren, state);
-//       const newChildren = [...(item.children || []), { id: maxId, label: action.payload.label, type: 'folder' }];
-//       const newState = _.set(_.merge({}, state), ['folder', ...path, 'children'], newChildren);
-//       return { ...newState, maxId, selectedItem: maxId };
-//     }
-//     case getType(actions.actionDelItem): {
-//       const [, path] = getItemById(action.payload.id, state.folder);
-//       if (path.length === 0) {
-//         return state;
-//       }
-//       return {
-//         ...state,
-//         modalConfirm: {
-//           open: true,
-//           title: `Confirm delete "${action.payload.label}"`,
-//           description: 'Are you sure?',
-//           callback: delItem(action),
-//         }
-//       };
-//     }
-//     default:
-//       return state;
-//   }
-// }
-
 function delItem(action: Action) {
   return (state: State) => {
-    const [item, path] = getItemById(action.payload.id, state.folder);
-    if (!item || path.length === 0) {
-      return state;
-    }
-    const parentPath = path.slice(0, -2);
-    const parent = _.get(state.folder, parentPath, state.folder) as Folder;
-    const children = parent.children?.filter(item => item.id !== action.payload.id);
-    const newState = _.set(_.merge({}, state), ['folder', ...parentPath, 'children'], children);
-    return { ...newState, selectedItem: parent.id };
+    const foundKey = Object.keys(state.items).find(key => state.items[Number(key)].childIds.some(id => id === action.payload.id));
+    const parentKey = Number(foundKey);
+    const targetItem = state.items[parentKey];
+    const deletedChildIds = { ...targetItem, childIds: targetItem.childIds.filter(id => id !== action.payload.id) };
+    return {
+      ...state,
+      props: {
+        ...state.props,
+        selectedItem: parentKey,
+      },
+      items: {
+        ...state.items,
+        [parentKey]: deletedChildIds,
+      },
+    };
   }
 }
 
@@ -171,24 +138,13 @@ FormContainer.defaultProps = Form.defaultProps = {
 
 // Connect to Redux
 function mapStateToProps(state: State, ownProps: FormProps) {
-  // if (state.selectedItem === ownProps.selectedItem) {
-  //   return { label: ownProps.label, selectedItem: ownProps.selectedItem };
-  // }
-  const [item] = getItemById(state.selectedItem, state.folder);
-  if (item == null) {
-    return { label: ownProps.label, selectedItem: ownProps.selectedItem };
-    // return state;
-  }
-  return { label: item.label, selectedItem: state.selectedItem };
+  return { ...state.props, label: state.items[state.props.selectedItem].label };
 }
 
 const ConnectedForm = connect(
-  // mapStateToProps,
   null,
   actions
 )(Form);
-
-// export default ConnectedForm;
 
 export default connect(
   mapStateToProps,

@@ -13,22 +13,16 @@ setupPlugins();
 import './App.css';
 
 import Form, { formReducers } from './Form';
-import Folders, { foldersReducer } from './Folders';
+import Folder, { foldersReducer } from './Folders';
 import ModalConfirm, { modalConfirmReducer } from './Modals';
 
 declare global {
 
-  interface FormProps {
-    label: string,
-    selectedItem: number,
-  }
-
-  interface Folder {
-    id: number,
+  interface Item {
     label: string,
     type: string,
-    children?: Folder[],
-    selected?: string,
+    childIds: number[],
+    selected?: boolean,
   }
 
   interface ModalConfirm {
@@ -39,40 +33,44 @@ declare global {
   }
 
   interface State {
-    selectedItem: number,
-    folder: Folder,
+    props: {
+      selectedItem: number,
+      maxId: number,
+    },
+    items: {
+      [id: number]: Item,
+    },
     modalConfirm: ModalConfirm,
-    maxId: number,
   }
   
 }
 
 const initState: State = {
-  maxId: 4,
-  selectedItem: 1,
-  folder: {
-    id: 1,
-    label: 'root',
-    type: 'folder',
-    children: [
-      {
-        id: 2,
-        label: 'folder1',
-        type: 'folder',
-      },
-      {
-        id: 3,
-        label: 'folder2',
-        type: 'folder',
-        children: [
-          {
-            id: 4,
-            label: 'folder4',
-            type: 'folder',
-          },
-        ],
-      },    
-    ],
+  props: {
+    maxId: 3,
+    selectedItem: 0,
+  },
+  items: {
+    0: {
+      label: 'root',
+      type: 'folder',
+      childIds: [1, 2],
+    },
+    1: {
+      label: 'folder1',
+      type: 'folder',
+      childIds: [],
+    },
+    2: {
+      label: 'folder2',
+      type: 'folder',
+      childIds: [3],
+    },
+    3: {
+      label: 'folder4',
+      type: 'folder',
+      childIds: [],
+    },
   },
   modalConfirm: {
     open: false,
@@ -81,32 +79,6 @@ const initState: State = {
     callback: (state) => state,
   }
 };
-
-// function betterCombineReducers<T>(original: typeof combineReducers) {
-//   return (reducers: ReducersMapObject, initialState: T) => {
-//     const newReducers = Object.keys(reducers).reduce((acc: { [key: string]: Reducer<any> }, key: string) => {
-//       const fn = reducers[key];
-//       const defaultState = initialState[key];
-//       acc[key] = (state, action: AnyAction) => {
-//         if (state == null) {
-//           return defaultState;
-//         }
-//         return fn(state, action);
-//       }
-//       return acc;
-//     }, {});
-//     return original(newReducers);
-//   }
-// }
-
-// Reducers
-// const reducers = betterCombineReducers(combineReducers)({
-//   form: formReducers,
-//   folder: foldersReducer,
-//   modalConfirm: modalConfirmReducer,
-// }, initState);
-
-// export const store = createStore(reducers);
 
 const reducers = {
   ...formReducers,
@@ -123,7 +95,7 @@ function App() {
   return (
     <>
       <Form />
-      <Folders />
+      <Folder key={0} id={0} />
       <ModalConfirm />
     </>
   );

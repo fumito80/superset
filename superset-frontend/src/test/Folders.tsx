@@ -7,29 +7,12 @@ import { createAction, ActionType, getType } from 'typesafe-actions';
 
 import './Folders.css';
 
-type ResultPath = (string | number | symbol)[];
-
-export function getItemById(id: number, node: Folder, path: ResultPath = []): [Folder | null, ResultPath] {
-  if (node.id === id) {
-    return [node, path];
-  }
-  if (!node.children) {
-    return [null, []];
-  }
-  let [item, itemPath, child]: [Folder | null, ResultPath, Folder | null] = [null, [], null];
-  let i = 0;
-  while (!item && (child = node.children[i])) {
-    [item, itemPath] = getItemById(id, child, [...path, 'children', i++]);
-  }
-  return [item, itemPath];
-}
-
 // Actions Creators
 const actions = {
   actionSelectLabel: createAction(
     'SELECT_LABEL',
     (id: number) => ({ id }),
-  )<Folder>(),
+  )<{ id: number }>(),
 };
 
 // Reducers
@@ -38,97 +21,52 @@ type Action = ActionType<typeof actions>;
 export const foldersReducer = {
   [getType(actions.actionSelectLabel)]:
     (state: State, action: Action) => {
-      return { ...state, selectedItem: action.payload.id };
+      return { ...state, props: { ...state.props, selectedItem: action.payload.id } };
     },
-}
-
-// export const foldersReducer = (state: State, action: Action) => {
-//   switch (action.type) {
-//     case getType(actions.actionSelectLabel): {
-//       return { ...state, selectedItem: action.payload.id };
-//     }
-//     default:
-//       return state;
-//   }
-// }
-
-function noop() {}
-
-// Container
-Folders.propTypes = {
-  label: PropTypes.string.isRequired,
-  type: PropTypes.string.isRequired,
-  id: PropTypes.number.isRequired,
-  children: PropTypes.array.isRequired,
-  selected: PropTypes.string.isRequired,
-  actionSelectLabel: PropTypes.func.isRequired,
-}
-
-type FoldersProps = PropTypes.InferProps<typeof Folders.propTypes>;
-
-function Folders(props: FoldersProps) {
-  const { id, ...rest } = props;
-  return <ConnectedFolder key={id} id={id} { ...rest } />;
-}
-
-Folders.defaultProps = {
-  id: 0,
-  type: '',
-  children: [],
-  label: '',
-  selected: '',
-  actionSelectLabel: noop,
 }
 
 // Component
 Folder.propTypes = {
+  id: PropTypes.number.isRequired,
   label: PropTypes.string,
   type: PropTypes.string,
-  id: PropTypes.number.isRequired,
-  children: PropTypes.array.isRequired,
-  selected: PropTypes.string.isRequired,
+  childIds: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
+  selected: PropTypes.bool.isRequired,
   actionSelectLabel: PropTypes.func.isRequired,
 }
 
 type FolderProps = PropTypes.InferProps<typeof Folder.propTypes>;
 
 function Folder(props: FolderProps) {
-  const { id, label, type, children = [], actionSelectLabel, selected } = props;
-  const nodes = children.map(({ id, ...other }) => <ConnectedFolder key={id} id={id} { ...other } />);
+  const { id, label, type, childIds = [], actionSelectLabel, selected } = props;
+  const nodes = childIds.map(id => <ConnectedFolder key={id} id={id} />);
   return (
     <li key={id} data-type={type}>
-      <a className={selected} onClick={() => actionSelectLabel(id)}>{label}</a>
+      <a className={selected ? 'selected' : ''} onClick={() => actionSelectLabel(id)}>{label}</a>
       <ul>{nodes}</ul>
     </li>
   );
 }
 
+function noop() {}
+
 Folder.defaultProps = {
-  children: [],
+  id: 0,
+  childIds: [],
   label: '',
-  selected: '',
+  type: '',
+  selected: false,
   actionSelectLabel: noop,
 };
 
 // Connect to Redux
-function mapStateToProps(state: State, { id }: Folder) {
-  const selected = (state.selectedItem === id) ? 'selected' : '';
-  const [item] = getItemById(id || state.folder.id, state.folder);
-  if (item == null) {
-    return { ...state.folder, selected };
-  }
-  return { ...item, selected };
-}
-
 const ConnectedFolder = connect(
   mapStateToProps,
   actions,
 )(Folder);
 
-function mapStateToPropsFolders(state: State) {
-  return { ...state.folder };
+function mapStateToProps(state: State, ownProps: FolderProps) {
+  return { ...state.items[ownProps.id], selected: state.props.selectedItem === ownProps.id };
 }
 
-export default connect(
-  mapStateToPropsFolders,
-)(Folders);
+export default ConnectedFolder;
