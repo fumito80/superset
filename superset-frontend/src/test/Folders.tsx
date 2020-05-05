@@ -9,7 +9,7 @@ import './Folders.css';
 
 // Slice
 export const folderSlice = createSlice({
-  name: 'form',
+  name: 'folder',
   initialState: {},
   reducers: {
     handleSelectLabel(state: State, action: PayloadAction<{ id: number }>) {

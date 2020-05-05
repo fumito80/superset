@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 //@ts-ignore
 import { FormControl, ButtonGroup, Button } from 'react-bootstrap';
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 // Slice
 export const formSlice = createSlice({
