@@ -4,7 +4,6 @@ import { hot } from 'react-hot-loader/root';
 import setupApp from '../setup/setupApp';
 import setupPlugins from '../setup/setupPlugins';
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
-import reduceReducers from 'reduce-reducers';
 
 // import '../../stylesheets/reactable-pagination.less';
 
@@ -16,11 +15,12 @@ import './App.css';
 import Form, { formSlice } from './Form';
 import Folder, { folderSlice } from './Folders';
 import ModalConfirm, { modalConfirmSlice } from './Modals';
+import { AnyAction } from 'redux';
 
 declare global {
 
-  type Reducer = (state: State) => State;
-  
+  type Reducer<T> = (state: T, action?: AnyAction) => T;
+
   interface Item {
     label: string,
     type: string,
@@ -32,7 +32,7 @@ declare global {
     open: boolean,
     title: string,
     description: string,
-    callback: Reducer,
+    callback: Reducer<State>,
   }
 
   interface State {
@@ -81,7 +81,15 @@ const initialState: State = {
   }
 };
 
-const reducer = reduceReducers(
+function composeReducers<T>(initState: T, ...reducers: Reducer<T>[]) {
+  return (state: T, action: AnyAction) => {
+    return reducers.reduce((acc: T, reducer: Reducer<T>) => {
+      return reducer(acc, action);
+    }, state ?? initState);
+  }
+}
+
+const reducer = composeReducers<{}>(
   initialState,
   formSlice.reducer,
   folderSlice.reducer,

@@ -10,7 +10,7 @@ export const modalConfirmSlice = createSlice({
   name: 'modalConfirm',
   initialState: {},
   reducers: {
-    handleApplyModal(state: State, action: PayloadAction<{ callback: Reducer }>) {
+    handleApplyModal(state: State, action: PayloadAction<{ callback: Reducer<State> }>) {
       return { ...action.payload.callback(state), modalConfirm: { ...state.modalConfirm, open: false } };
     },
     handleCancelModal(state: State) {
