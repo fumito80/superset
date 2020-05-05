@@ -13,11 +13,13 @@ setupPlugins();
 import './App.css';
 
 import Form, { formReducers } from './Form';
-import Folder, { foldersReducer } from './Folders';
-import ModalConfirm, { modalConfirmReducer } from './Modals';
+import Folder, { foldersReducers } from './Folders';
+import ModalConfirm, { modalConfirmReducers } from './Modals';
 
 declare global {
 
+  type Reducer = (state: State) => State;
+  
   interface Item {
     label: string,
     type: string,
@@ -29,26 +31,25 @@ declare global {
     open: boolean,
     title: string,
     description: string,
-    callback: (state: State) => State,
+    callback: Reducer,
   }
 
   interface State {
     props: {
-      selectedItem: number,
-      maxId: number,
+      selectedId: number,
+      // maxId: number,
     },
     items: {
       [id: number]: Item,
     },
     modalConfirm: ModalConfirm,
   }
-  
+
 }
 
 const initState: State = {
   props: {
-    maxId: 3,
-    selectedItem: 0,
+    selectedId: 0,
   },
   items: {
     0: {
@@ -82,13 +83,13 @@ const initState: State = {
 
 const reducers = {
   ...formReducers,
-  ...foldersReducer,
-  ...modalConfirmReducer,
+  ...foldersReducers,
+  ...modalConfirmReducers,
 };
 
 // Store
-export const store: any = createStore((state, action) => {
-  return (reducers[action.type] || ((state: State) => state))(state, action);
+export const store = createStore((state: State, action) => {
+  return (reducers[action.type] || ((a: State) => a))(state, action);
 }, initState);
 
 function App() {
