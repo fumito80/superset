@@ -81,15 +81,15 @@ const initialState: State = {
   }
 };
 
-function composeReducers<T>(initState: T, ...reducers: Reducer<T>[]) {
+function composeReducers<T>(initState: T, ...reducers: Reducer<{}>[]) {
   return (state: T, action: AnyAction) => {
-    return reducers.reduce((acc: T, reducer: Reducer<T>) => {
+    return reducers.reduce((acc: T, reducer: Reducer<{}>) => {
       return reducer(acc, action);
     }, state ?? initState);
   }
 }
 
-const reducer = composeReducers<{}>(
+const reducer = composeReducers(
   initialState,
   formSlice.reducer,
   folderSlice.reducer,
