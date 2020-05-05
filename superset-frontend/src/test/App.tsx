@@ -1,9 +1,10 @@
 import React from 'react';
-import { createStore } from 'redux';
 import { hot } from 'react-hot-loader/root';
 // import ToastPresenter from '../messageToasts/containers/ToastPresenter';
 import setupApp from '../setup/setupApp';
 import setupPlugins from '../setup/setupPlugins';
+import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
+import reduceReducers from 'reduce-reducers';
 
 // import '../../stylesheets/reactable-pagination.less';
 
@@ -12,9 +13,9 @@ setupPlugins();
 
 import './App.css';
 
-import Form, { formReducers } from './Form';
-import Folder, { foldersReducers } from './Folders';
-import ModalConfirm, { modalConfirmReducers } from './Modals';
+import Form, { formSlice } from './Form';
+import Folder, { folderSlice } from './Folders';
+import ModalConfirm, { modalConfirmSlice } from './Modals';
 
 declare global {
 
@@ -37,7 +38,6 @@ declare global {
   interface State {
     props: {
       selectedId: number,
-      // maxId: number,
     },
     items: {
       [id: number]: Item,
@@ -47,7 +47,7 @@ declare global {
 
 }
 
-const initState: State = {
+const initialState: State = {
   props: {
     selectedId: 0,
   },
@@ -81,16 +81,19 @@ const initState: State = {
   }
 };
 
-const reducers = {
-  ...formReducers,
-  ...foldersReducers,
-  ...modalConfirmReducers,
-};
+const reducer = reduceReducers(
+  initialState,
+  formSlice.reducer,
+  folderSlice.reducer,
+  modalConfirmSlice.reducer,
+);
 
-// Store
-export const store = createStore((state: State, action) => {
-  return (reducers[action.type] || ((a: State) => a))(state, action);
-}, initState);
+export const store = configureStore({
+  reducer,
+  middleware: getDefaultMiddleware({
+    serializableCheck: false,
+  }),
+});
 
 function App() {
   return (
