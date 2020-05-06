@@ -21,7 +21,7 @@
 {% block title %}{{ _("React test") }}{% endblock %}
 
 {% block body %}
-  <div id="app" class="container" data-bootstrap="{{ bootstrap_data }}">
+  <div id="app" class="container" data-bootstrap="{{ bootstrap_data }}" data-items="{{ init_data }}">
     <img src="/static/assets/images/loading.gif" style="width: 50px; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%)">
   </div>
 {% endblock %}

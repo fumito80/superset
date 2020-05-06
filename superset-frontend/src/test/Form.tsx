@@ -1,53 +1,47 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 //@ts-ignore
 import { FormControl, ButtonGroup, Button } from 'react-bootstrap';
-import { AnyAction } from 'redux';
 
-// Actions
-enum actions {
-  ALT_LABEL = 'ALT_LABEL',
-  ADD_ITEM = 'ADD_ITEM',
-  DEL_ITEM = 'DEL_ITEM',
-}
+const fetchItems = createAsyncThunk<State, string>(
+  'form/fetch',
+  async (csrf_token, thunk): Promise<State> => {
+    const formData = new FormData();
+    formData.append('csrf_token', csrf_token);
+    const res = await fetch('/myview/fetch/', {
+      method: 'POST',
+      credentials: 'same-origin',
+      body: formData,
+    });
+    if (res.ok) {
+      return (await res.json()) as State;
+    }
+    throw new Error('fetch count error');
+  }
+);
 
-export type Reducers = {
-  [key in actions]: (state: State, action: AnyAction) => State;
-}
-
-// Actions Creators
-const actionCreators = {
-  handleAltLabel: (id: number, label: string) => {
-    return { type: actions.ALT_LABEL, id, label };
-  },
-  handleAddItem: (id: number, label: string) => {
-    return { type: actions.ADD_ITEM, id, label };
-  },
-  handleDelItem: (id: number, label: string) => {
-    return { type: actions.DEL_ITEM, id, label };
-  },
-}
-
-// Reducers
-export const formReducers: Reducers = {
-  [actions.ALT_LABEL]:
-    (state: State, action: ReturnType<typeof actionCreators.handleAltLabel>) => {
-      const altedLabelItem = { ...state.items[action.id], label: action.label };
+// Slice
+export const formSlice = createSlice({
+  name: 'form',
+  initialState: {},
+  reducers: {
+    handleAltLabel(state: State, action: PayloadAction<{ id: number, label: string }>) {
+      const altedLabelItem = { ...state.items[action.payload.id], label: action.payload.label };
       return {
         ...state,
         items: {
           ...state.items,
-          [action.id]: altedLabelItem,
+          [action.payload.id]: altedLabelItem,
         }
       };
     },
-  [actions.ADD_ITEM]:
-    (state: State, action: ReturnType<typeof actionCreators.handleAddItem>) => {
+    handleAddItem(state: State, action: PayloadAction<{ id: number, label: string }>) {
       const selectedId = Math.max(...Object.keys(state.items).map(Number)) + 1;
-      const targetItem = state.items[action.id];
-      const addedChildIds = { ...targetItem, childIds: [...targetItem.childIds, selectedId] };
-      const newItem = { label: action.label, type: '', childIds: [] };
+      const targetItem = state.items[action.payload.id];
+      const addedChildIds = { ...targetItem, childIds: [...(targetItem.childIds || []), selectedId] };
+      const newItem = { label: action.payload.label, type: '', childIds: [] };
       return {
         ...state,
         props: {
@@ -55,34 +49,42 @@ export const formReducers: Reducers = {
         },
         items: {
           ...state.items,
-          [action.id]: addedChildIds,
+          [action.payload.id]: addedChildIds,
           [selectedId]: newItem,
         },
       };
     },
-  [actions.DEL_ITEM]:
-    (state: State, action: ReturnType<typeof actionCreators.handleDelItem>) => {
-      if (action.id === 0) {
+    handleDelItem(state: State, action: PayloadAction<{ id: number, label: string }>) {
+      if (action.payload.id === 0) {
         return state;
       }
       return {
         ...state,
         modalConfirm: {
           open: true,
-          title: `Confirm delete "${action.label}"`,
+          title: `Confirm delete "${action.payload.label}"`,
           description: 'Are you sure?',
           callback: delItem(action),
         }
       };
     },
-}
+  },
+  extraReducers: (builder) => {
+    builder.addCase(fetchItems.fulfilled, (state, action) => {
+      return {
+        ...state,
+        items: action.payload,
+      };
+    });
+  },
+});
 
-function delItem(action: ReturnType<typeof actionCreators.handleDelItem>) {
+function delItem(action: PayloadAction<{ id: number, label: string }>) {
   return (state: State): State => {
-    const foundKey = Object.keys(state.items).find(key => state.items[Number(key)].childIds.some(id => id === action.id));
+    const foundKey = Object.keys(state.items).find(key => (state.items[Number(key)].childIds || []).some(id => id === action.payload.id));
     const parentKey = Number(foundKey);
     const targetItem = state.items[parentKey];
-    const deletedChildIds = { ...targetItem, childIds: targetItem.childIds.filter(id => id !== action.id) };
+    const deletedChildIds = { ...targetItem, childIds: (targetItem.childIds || []).filter(id => id !== action.payload.id) };
     return {
       ...state,
       props: {
@@ -99,11 +101,13 @@ function delItem(action: ReturnType<typeof actionCreators.handleDelItem>) {
 
 // Component
 Form.propTypes = {
+  selectedId: PropTypes.number,
+  label: PropTypes.string,
+  csrf_token: PropTypes.string,
   handleAltLabel: PropTypes.func.isRequired,
   handleAddItem: PropTypes.func.isRequired,
   handleDelItem: PropTypes.func.isRequired,
-  selectedId: PropTypes.number,
-  label: PropTypes.string,
+  fetchItems: PropTypes.func.isRequired,
 }
 
 type FormProps = PropTypes.InferProps<typeof Form.propTypes>;
@@ -113,7 +117,8 @@ function FormContainer(props: FormProps) {
 }
 
 function Form(props: FormProps) {
-  const { selectedId, label, handleAltLabel, handleAddItem, handleDelItem } = props;
+  const { selectedId, label, csrf_token, handleAltLabel, handleAddItem, handleDelItem, fetchItems } = props;
+  const disabledItemButton = selectedId === -1;
   let labelInput: HTMLInputElement;
   return (
     <div>
@@ -121,16 +126,17 @@ function Form(props: FormProps) {
         <FormControl
           key={selectedId}
           type="text"
-          placeholder="Enter name"
+          placeholder="Select item"
           defaultValue={label}
           bsSize="sm"
           inputRef={(ref: HTMLInputElement) => { labelInput = ref }}
         />
       </label>
       <ButtonGroup aria-label="Item operation">
-        <Button bsSize="sm" onClick={() => handleAltLabel(selectedId, labelInput.value)}>Alt name</Button>
-        <Button bsSize="sm" onClick={() => handleAddItem(selectedId, labelInput.value)}>Add item</Button>
-        <Button bsSize="sm" onClick={() => handleDelItem(selectedId, labelInput.value)}>Del item</Button>
+        <Button bsSize="sm" bsStyle="info" onClick={() => handleAltLabel({ id: selectedId, label: labelInput.value })} disabled={disabledItemButton}>Alt name</Button>
+        <Button bsSize="sm" bsStyle="success" onClick={() => handleAddItem({ id: selectedId, label: labelInput.value })} disabled={disabledItemButton}>Add item</Button>
+        <Button bsSize="sm" bsStyle="danger" onClick={() => handleDelItem({ id: selectedId, label: labelInput.value })} disabled={selectedId === 0 || disabledItemButton}>Del item</Button>
+        <Button bsSize="sm" bsStyle="warning" onClick={() => fetchItems(csrf_token)}>Reset</Button>
       </ButtonGroup>
     </div>
   );
@@ -141,16 +147,29 @@ FormContainer.defaultProps = Form.defaultProps = {
   handleAltLabel: noop,
   handleAddItem: noop,
   handleDelItem: noop,
+  fetchItems: noop,
 };
 
 // Connect to Redux
-function mapStateToProps(state: State, ownProps: FormProps) {
-  return { ...state.props, label: state.items[state.props.selectedId].label };
+function mapStateToProps(state: State): Partial<FormProps> {
+  const selectedItem = state.items[state.props.selectedId];
+  if (selectedItem == null) {
+    return {
+      ...state.props,
+      selectedId: -1,
+      csrf_token: state.csrf_token,
+    };
+  }
+  return {
+    ...state.props,
+    label: selectedItem.label,
+    csrf_token: state.csrf_token,
+  };
 }
 
 const ConnectedForm = connect(
   null,
-  actionCreators
+  { ...formSlice.actions, fetchItems },
 )(Form);
 
 export default connect(

@@ -1,34 +1,22 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { AnyAction } from 'redux';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 // import { Panel, Row, Col, Tabs, Tab, FormControl } from 'react-bootstrap';
 
 import './Folders.css';
 
-// Actions
-enum actions {
-  SELECT_LABEL = 'SELECT_LABEL',
-}
-
-type Reducers = {
-  [key in actions]: (state: State, action: AnyAction) => State;
-}
-
-// Actions Creators
-const actionCreators = {
-  handleSelectLabel: (id: number) => {
-    return { type: actions.SELECT_LABEL, id };
+// Slice
+export const folderSlice = createSlice({
+  name: 'folder',
+  initialState: {},
+  reducers: {
+    handleSelectLabel(state: State, action: PayloadAction<{ id: number }>) {
+      return { ...state, props: { ...state.props, selectedId: action.payload.id } };
+    },
   },
-}
-
-// Reducers
-export const foldersReducers: Reducers = {
-  [actions.SELECT_LABEL]: (state: State, action: ReturnType<typeof actionCreators.handleSelectLabel>) => {
-    return { ...state, props: { ...state.props, selectedId: action.id } };
-  }
-}
+});
 
 // Component
 Folder.propTypes = {
@@ -44,10 +32,10 @@ type FolderProps = PropTypes.InferProps<typeof Folder.propTypes>;
 
 function Folder(props: FolderProps) {
   const { id, label, type, childIds = [], handleSelectLabel, selected } = props;
-  const nodes = childIds.map(id => <ConnectedFolder key={id} id={id} />);
+  const nodes = childIds.map(childId => <ConnectedFolder key={childId} id={childId} />);
   return (
     <li key={id} data-type={type}>
-      <a className={selected ? 'selected' : ''} onClick={() => handleSelectLabel(id)}>{label}</a>
+      <a className={selected ? 'selected' : ''} onClick={() => handleSelectLabel({ id })}>{label}</a>
       <ul>{nodes}</ul>
     </li>
   );
@@ -67,7 +55,7 @@ Folder.defaultProps = {
 // Connect to Redux
 const ConnectedFolder = connect(
   mapStateToProps,
-  actionCreators,
+  folderSlice.actions,
 )(Folder);
 
 function mapStateToProps(state: State, ownProps: FolderProps) {
