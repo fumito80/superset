@@ -118,6 +118,7 @@ function FormContainer(props: FormProps) {
 
 function Form(props: FormProps) {
   const { selectedId, label, csrf_token, handleAltLabel, handleAddItem, handleDelItem, fetchItems } = props;
+  const disabledItemButton = selectedId === -1;
   let labelInput: HTMLInputElement;
   return (
     <div>
@@ -125,16 +126,16 @@ function Form(props: FormProps) {
         <FormControl
           key={selectedId}
           type="text"
-          placeholder="Enter name"
+          placeholder="Select item"
           defaultValue={label}
           bsSize="sm"
           inputRef={(ref: HTMLInputElement) => { labelInput = ref }}
         />
       </label>
       <ButtonGroup aria-label="Item operation">
-        <Button bsSize="sm" bsStyle="info" onClick={() => handleAltLabel({ id: selectedId, label: labelInput.value })}>Alt name</Button>
-        <Button bsSize="sm" bsStyle="success" onClick={() => handleAddItem({ id: selectedId, label: labelInput.value })}>Add item</Button>
-        <Button bsSize="sm" bsStyle="danger" onClick={() => handleDelItem({ id: selectedId, label: labelInput.value })} disabled={selectedId === 0}>Del item</Button>
+        <Button bsSize="sm" bsStyle="info" onClick={() => handleAltLabel({ id: selectedId, label: labelInput.value })} disabled={disabledItemButton}>Alt name</Button>
+        <Button bsSize="sm" bsStyle="success" onClick={() => handleAddItem({ id: selectedId, label: labelInput.value })} disabled={disabledItemButton}>Add item</Button>
+        <Button bsSize="sm" bsStyle="danger" onClick={() => handleDelItem({ id: selectedId, label: labelInput.value })} disabled={selectedId === 0 || disabledItemButton}>Del item</Button>
         <Button bsSize="sm" bsStyle="warning" onClick={() => fetchItems(csrf_token)}>Reset</Button>
       </ButtonGroup>
     </div>
@@ -150,14 +151,18 @@ FormContainer.defaultProps = Form.defaultProps = {
 };
 
 // Connect to Redux
-function mapStateToProps(state: State) {
+function mapStateToProps(state: State): Partial<FormProps> {
   const selectedItem = state.items[state.props.selectedId];
   if (selectedItem == null) {
-    return state;
+    return {
+      ...state.props,
+      selectedId: -1,
+      csrf_token: state.csrf_token,
+    };
   }
   return {
     ...state.props,
-    label: state.items[state.props.selectedId].label,
+    label: selectedItem.label,
     csrf_token: state.csrf_token,
   };
 }

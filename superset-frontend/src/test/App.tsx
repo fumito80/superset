@@ -53,26 +53,6 @@ const initialState: State = {
     selectedId: 0,
   },
   items: {},
-  // items: {
-  //   0: {
-  //     label: 'root',
-  //     type: 'folder',
-  //     childIds: [1, 2],
-  //   },
-  //   1: {
-  //     label: 'folder1',
-  //     type: 'folder',
-  //   },
-  //   2: {
-  //     label: 'folder2',
-  //     type: 'folder',
-  //     childIds: [3],
-  //   },
-  //   3: {
-  //     label: 'folder4',
-  //     type: 'folder',
-  //   },
-  // },
   modalConfirm: {
     open: false,
     title: '',

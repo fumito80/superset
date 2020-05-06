@@ -1,5 +1,4 @@
 #
-import json
 from flask import abort, flash, g
 from flask import request, Response
 from flask_appbuilder import AppBuilder, BaseView, expose, has_access
@@ -20,7 +19,6 @@ class MyView(BaseSupersetView):
     def method1(self):
         # do something with param1
         # and return to previous page or index
-        # return 'Hello'
         payload = {
             "user": bootstrap_user_data(g.user),
             # "common": common_bootstrap_payload(),
