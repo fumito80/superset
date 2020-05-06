@@ -32,7 +32,7 @@ type FolderProps = PropTypes.InferProps<typeof Folder.propTypes>;
 
 function Folder(props: FolderProps) {
   const { id, label, type, childIds = [], handleSelectLabel, selected } = props;
-  const nodes = childIds.map(id => <ConnectedFolder key={id} id={id} />);
+  const nodes = childIds.map(childId => <ConnectedFolder key={childId} id={childId} />);
   return (
     <li key={id} data-type={type}>
       <a className={selected ? 'selected' : ''} onClick={() => handleSelectLabel({ id })}>{label}</a>
