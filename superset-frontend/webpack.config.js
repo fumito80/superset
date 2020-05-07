@@ -172,6 +172,7 @@ const config = {
     profile: addPreamble('/src/profile/index.jsx'),
     showSavedQuery: [path.join(APP_DIR, '/src/showSavedQuery/index.jsx')],
     test: addPreamble('/src/test/index.jsx'),
+    xplore: addPreamble('/src/xplore/index.jsx'),
   },
   output,
   stats: 'minimal',

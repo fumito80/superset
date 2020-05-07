@@ -178,6 +178,7 @@ class SupersetAppInitializer:
         )
         from superset.views.tags import TagView
         from superset.views.test import MyView
+        from superset.views.xplore import Xplore
 
         #
         # Setup API views
@@ -261,6 +262,14 @@ class SupersetAppInitializer:
             icon="fa-search",
         )
         # logger.info(MyView)
+        appbuilder.add_view(
+            Xplore,
+            "index",
+            label=__("Xplore"),
+            category="MyView",
+            category_label=__("My View"),
+            icon="fa-heart",
+        )
         appbuilder.add_view(
             MyView,
             "method1",

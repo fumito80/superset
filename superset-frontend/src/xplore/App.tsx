@@ -5,6 +5,8 @@ import { Provider } from 'react-redux';
 import setupApp from '../setup/setupApp';
 import setupPlugins from '../setup/setupPlugins';
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
+//@ts-ignore
+import { Panel, Row, DropdownButton, Button, MenuItem } from 'react-bootstrap';
 
 // import '../../stylesheets/reactable-pagination.less';
 
@@ -13,21 +15,20 @@ setupPlugins();
 
 import './App.css';
 
-import Form, { formSlice } from './Form';
-import Folder, { folderSlice } from './Folders';
-import ModalConfirm, { modalConfirmSlice } from './Modals';
+import Aside from './containers/Aside';
+import Main from './containers/Main';
+// import Templates from './components/Templates';
+// import MainHeader from './components/MainHeader';
+// import Sites from './components/Sites';
+// import Units from './components/Units';
+// import Nodes from './components/Nodes';
+// import Output from './components/Output';
+import ModalConfirm, { sliceModalConfirm } from './Modals';
 import { AnyAction } from 'redux';
 
 declare global {
 
-  type Reducer<T> = (state: T, action?: AnyAction) => T;
-
-  interface Item {
-    label: string,
-    type: string,
-    childIds?: number[],
-    selected?: boolean,
-  }
+  // type Reducer<T> = (state: T, action?: AnyAction) => T;
 
   interface ModalConfirm {
     open: boolean,
@@ -36,24 +37,42 @@ declare global {
     callback: Reducer<State>,
   }
 
-  interface State {
+  interface AppState {
     props: {
-      selectedId: number,
+      label: string,
+      updated: string,
+      selectedTmplId: number,
+      collapseAside: boolean,
+      collapseNewTmpl: boolean,
+      collapseTmpl: boolean,
     },
-    items: {
+    sitesIds: number[],
+    uints: {
       [id: number]: Item,
     },
+    node: {
+      [id: number]: Item,
+    },
+    outputIds: number[],
     modalConfirm: ModalConfirm,
     csrf_token: string,
   }
 
 }
 
-const initialState: State = {
+const initialState: AppState = {
   props: {
-    selectedId: 0,
+    label: '',
+    updated: '',
+    selectedTmplId: 0,
+    collapseAside: false,
+    collapseNewTmpl: false,
+    collapseTmpl: false,
   },
-  items: {},
+  sitesIds: [],
+  uints: {},
+  node: {},
+  outputIds: [],
   modalConfirm: {
     open: false,
     title: '',
@@ -76,9 +95,9 @@ const csrf_token = (document.getElementById('csrf_token') as HTMLInputElement)?.
 
 const reducer = composeReducers(
   { ...initialState, items, csrf_token },
-  formSlice.reducer,
-  folderSlice.reducer,
-  modalConfirmSlice.reducer,
+  // sliceAside.reducer,
+  // sliceMain.reducer,
+  sliceModalConfirm.reducer,
 );
 
 const store = configureStore({
@@ -92,8 +111,8 @@ function App() {
   return (
     <Provider store={store}>
       <>
-        <Form />
-        <Folder key={0} id={0} />
+        <Aside />
+        <Main />
         <ModalConfirm />
       </>
     </Provider>
