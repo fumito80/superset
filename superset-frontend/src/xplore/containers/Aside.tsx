@@ -14,7 +14,7 @@ export default function Aside() {
         <div className="scrollbar-content">
           <Tabs id="controlSections">
             <Tab eventKey="query" title={"Template"}>
-              <NewTemplates label="Welcome" expanded={true} />
+              <NewTemplates label="Welcome" />
             </Tab>
             {/* <Tab eventKey="display" title={"History"}>
             </Tab> */}
