@@ -12,7 +12,7 @@ babel==2.8.0              # via flask-babel
 backoff==1.10.0           # via apache-superset (setup.py)
 billiard==3.6.1.0         # via celery
 bleach==3.1.0             # via apache-superset (setup.py)
-celery==4.4.0             # via apache-superset (setup.py)
+celery==5.2.2             # via apache-superset (setup.py)
 cffi==1.13.2              # via cryptography
 click==7.1.1              # via apache-superset (setup.py), flask, flask-appbuilder
 colorama==0.4.3           # via apache-superset (setup.py), flask-appbuilder
