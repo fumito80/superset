@@ -43,7 +43,7 @@ itsdangerous==1.1.0       # via flask
 jinja2==2.10.3            # via flask, flask-babel
 jsonschema==3.2.0         # via flask-appbuilder
 kombu==4.6.7              # via celery
-mako==1.1.1               # via alembic
+mako==1.2.2               # via alembic
 markdown==3.1.1           # via apache-superset (setup.py)
 markupsafe==1.1.1         # via jinja2, mako
 marshmallow-enum==1.5.1   # via flask-appbuilder
